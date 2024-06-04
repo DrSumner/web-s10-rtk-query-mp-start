@@ -5,34 +5,38 @@ import {
   toggleVisibility,
 } from '../state/quotesSlice'
 
+import { useGetQuotesQuery, useDeleteQuotesMutation, useToggleFakeMutation } from '../state/quotesApi'
+
 export default function Quotes() {
-  const quotes = [
-    {
-      id: 1,
-      quoteText: "Don't cry because it's over, smile because it happened.",
-      authorName: "Dr. Seuss",
-      apocryphal: true,
-    },
-    {
-      id: 2,
-      quoteText: "So many books, so little time.",
-      authorName: "Frank Zappa",
-      apocryphal: false,
-    },
-    {
-      id: 3,
-      quoteText: "Be yourself; everyone else is already taken.",
-      authorName: "Oscar Wilde",
-      apocryphal: false,
-    },
-  ]
+
+const { 
+  data : quotes,
+  error: quotesError,
+    isLoading: quotesLoading,
+    isFetching: quotesFetching,
+} = useGetQuotesQuery()
+
+const [deleteQuote,{
+  error:deletionError,
+  isLoading: deletingQuote,
+}] = useDeleteQuotesMutation()
+const [toggleFake,{
+  error: togglingError,
+  isLoading: toggling,
+}] = useToggleFakeMutation()
+//console.log(quotes)
+
   const displayAllQuotes = useSelector(st => st.quotesState.displayAllQuotes)
   const highlightedQuote = useSelector(st => st.quotesState.highlightedQuote)
   const dispatch = useDispatch()
   return (
     <div id="quotes">
       <h3>Quotes</h3>
-      <div>
+       { quotesLoading ? <p>Loading Quotes...</p> :
+        deletingQuote ? <p>Deleting Quote...</p> :
+        toggling ? <p>Changing Quote...</p>
+       
+       : <div>
         {
           quotes?.filter(qt => {
             return displayAllQuotes || !qt.apocryphal
@@ -45,9 +49,9 @@ export default function Quotes() {
                 <div>{qt.quoteText}</div>
                 <div>{qt.authorName}</div>
                 <div className="quote-buttons">
-                  <button>DELETE</button>
+                  <button onClick={() => deleteQuote(qt)} >DELETE</button>
                   <button onClick={() => dispatch(setHighlightedQuote(qt.id))}>HIGHLIGHT</button>
-                  <button>FAKE</button>
+                  <button onClick={() => toggleFake(qt)} >FAKE</button>
                 </div>
               </div>
             ))
@@ -55,7 +59,7 @@ export default function Quotes() {
         {
           !quotes?.length && "No quotes here! Go write some."
         }
-      </div>
+      </div>}
       {!!quotes?.length && <button onClick={() => dispatch(toggleVisibility())}>
         {displayAllQuotes ? 'HIDE' : 'SHOW'} FAKE QUOTES
       </button>}
